@@ -244,7 +244,7 @@ class Calendar {
     }
     
     //handles user clicks on cells
-    selectHandler(e) {
+    selectHandler(e) { 
         if (e.target.classList.contains('calendar-cell-gray')) return //only days of current month can be selected
         if (!e.target.classList.contains('calendar-cell')) return //if it was   n't a click on a cell
 
@@ -260,8 +260,9 @@ class Calendar {
             this.displayed_date.getMonth(),
             e.target.innerHTML
         )
-
+        
         e.target.id = 'selected_date'
         e.target.classList.add('calendar-cell-selected')
+        alert(e.target.id);
     }
 }
