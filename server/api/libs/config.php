@@ -1,0 +1,20 @@
+<?php
+// define('USER', 'user15');
+// define('PASSWD', 'user15');
+define('USER', 'root');
+define('PASSWD', '');
+define('HOST', 'localhost');
+define('DBNAME', 'user15');
+define('DSN', 'mysql:dbname=user15; host=localhost');
+define('YEAR', 'ENTER YEAR REQUARED !');
+define('CAR', 'SORRY CAR IS NOT FOUND, PLEASE use SERCH HELPER BELOW !');
+define('LOGFORM', 'this password or email does not exist, or you need to register !');
+define('SEARCH_PARAMS', 'please select corect params !');
+define('BUY_SUCCESS', 'congrats, you bought this car! Our meneger will call you!');
+define('BUY_ERROR', 'sorry, you did not buy this  car!');
+define('PAY_ERROR', 'sorry, check type paying');
+define('PASSWD_ERROR', 'parols are not equal');
+define('REGISTER_SUCCESS', 'congrats, you are registered!');
+define('COUNT_ERR_SYMBOL', 'please enter min 4  symbols in the parol fild and min 3 symbols in the other filds !');
+define('COUNT_ERR_SYMBOL_PASSWD', 'enter password more then 3 symbols !');
+define('ERR_EMAIL', 'your Email isnt VALID !');
