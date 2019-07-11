@@ -1,11 +1,11 @@
 RewriteEngine On
 
 #for classes
-#RewriteBase /~user15/booker/server/api/booker/
+RewriteBase /~user15/booker/server/api/booker/
 
 
 #for home
-RewriteBase /booker/server/api/booker/
+#RewriteBase /booker/server/api/booker/
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
