@@ -15,26 +15,26 @@ class restServer
            $arrMethod= array();
            $arrParams= array();
            $this->url= $_SERVER['REQUEST_URI'];  
-            // $arrRez = explode('/',$this->nameMethod= substr($this->url, 37));//for classes
-            $arrRez = explode('/',$this->nameMethod= substr($this->url,25));//for home
+            $arrRez = explode('/',$this->nameMethod= substr($this->url, 34));//for classes
+            // $arrRez = explode('/',$this->nameMethod= substr($this->url,25));//for home
            //print_r($arrRez);
             $this->method = $_SERVER['REQUEST_METHOD'];
             foreach ($arrRez as $key=>$val)
             {
-                if ($key==1)
+                if ($key==0)//for home ==1 for class ==0
                 { //print_r($arrRez);
                     array_push($arrMethod, $val); 
                     $this->nameMethod = $arrMethod[0]; //print_r($this->nameMethod);
                 }
-                if ($key==2)
+                if ($key==1)//for home ==2 for class ==1
                 {
                     array_push($arrParams, $val);
                     $this->params = $arrParams[0];
                 }
             
-                   //print_r($this->params);
+                    //print_r($this->params);
              }
-                //print_r( $this->nameMethod);
+                //print_r( $this->nameMethod);exit;
              $this->getSortVuew();
        }
     }
