@@ -23,10 +23,22 @@ class carShop extends restServer
     protected $logEmail;
     protected $logPasswd;
     protected $userId;// for show order
+    protected $testUser;
     
     
 
-
+    function getTest(){
+        $resultArray = array();
+        $dbh = new PDO(DSN, USER, PASSWD);
+        foreach($dbh->query("select * from test") as $row) 
+        {
+            $tmp_array = array('id'=>$row['id'],'name'=>$row['name']);
+            array_push($resultArray, $tmp_array); 
+        }
+       $this->testUser = $resultArray;
+       $this->vuewRez($this->testUser, $this->sortVuew);
+        return $resultArray;
+    }
 
     function getAllCars()
     { //print_r('fff');
@@ -134,9 +146,9 @@ class carShop extends restServer
         print $xml->asXML();
     }
     
-    public function help()
+    public function getHelp()
     {
-         //print_r( get_class_methods($this));
+         print_r( get_class_methods($this));
     }
 
 
@@ -517,10 +529,10 @@ class carShop extends restServer
     }   
 }
 $obj = new carShop();
-//$obj->parsUrl();
-$obj->help();
+$obj->parsUrl();
+
 // $obj->postReg($formData);
 // $obj->setMethod('Test', "Vasia");
-//$obj->getMethod();
+$obj->getMethod();
 //echo $obj->getErrors();
-echo 'hello world';
+//echo 'hello world';
