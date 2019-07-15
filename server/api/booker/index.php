@@ -2,44 +2,30 @@
 include '../libs/restServer.php';
 class carShop extends restServer
 {
+
     protected $sortVuew;
-    // protected $arrayAllCars;
-    // protected $arrayOneCar;
     protected $email;
     protected $name;
     protected $role;
     protected $passwd;
     protected $confirmpasswd;
-    // protected $PayUserId;
-    // protected $paymentsType;
-    // protected $PayCarId;
-    // protected $brand;
-    // protected $color;
-    // protected $engine_capacity;
-    // protected $max_speed;
-    // protected $model;
-    // protected $price;
-    // protected $year;
     protected $logEmail;
     protected $logPasswd;
-    protected $userId;// for show order
-    protected $testUser;
+    protected $userId;
+    protected $room;
+    protected $startTime;
+    protected $startDay;
+    protected $endTime;
+    protected $note;
+    protected $recurent;
+    protected $times;
+    protected $duration;
+
+   
     
     
 
-    function getTest(){
-        $resultArray = array();
-        $dbh = new PDO(DSN, USER, PASSWD);
-        foreach($dbh->query("select * from b_test") as $row) 
-        {
-            $tmp_array = array('id'=>$row['id'],'name'=>$row['name']);
-            array_push($resultArray, $tmp_array); 
-        }
-       $this->testUser = $resultArray;
-       $this->vuewRez($this->testUser, $this->sortVuew);
-        return $resultArray;
-    }
-
+    
     // function getAllCars()
     // { //print_r('fff');
     //     $resultArray = array();
@@ -83,7 +69,7 @@ class carShop extends restServer
         // return $this->sortVuew;
     }
     private function vuewRez($result, $sortVuew = 'json')
-    {
+    {   
         header('Access-Control-Allow-Origin: *');
         header('Content-Type: text/html; charset=utf-8'); 
         header('Cache-Control: no-cache');
@@ -248,7 +234,8 @@ class carShop extends restServer
     
 
     public function putLog($params)
-    { return $this->vuewRez($params); 
+    { 
+        // return $this->vuewRez($params); 
         
         if (sizeof($params))
         {
@@ -267,7 +254,7 @@ class carShop extends restServer
             //return  $this->vuewRez(array(1=>$this->logPasswd));
             $arr = array();
             $dbh = new PDO(DSN, USER, PASSWD);
-            $quer = "SELECT id, name, password FROM users WHERE email = '$this->logEmail' AND password = '$this->logPasswd'"; //print_r($quer);
+            $quer = "SELECT id, name, password FROM b_users WHERE email = '$this->logEmail' AND password = '$this->logPasswd'"; //print_r($quer);
             foreach($dbh->query($quer) as $row) 
            { 
                 $tmp_arr = array('name'=>$row['name'],'id'=>$row['id'] ,'password'=>$row['password']);
@@ -289,6 +276,219 @@ class carShop extends restServer
         }
        //return $this->vuewRez($params);
     }
+
+
+
+    public function postAddEvent($formdata)
+    {   
+        if (sizeof($formdata))
+        {   
+        // var_dump($formdata);//exit;
+                // return $this->vuewRez($formdata);
+            foreach ($formdata as $key => $value) 
+            {
+               if ($key=='rooms')
+               {
+                    $this->room =  trim(htmlspecialchars($value));
+               }
+               if ($key=='dayStart')
+               { 
+                    $this->startDay =  trim(htmlspecialchars($value));
+               }
+               if ( $key=='timeStart')
+               {
+                    $this->startTime =  trim(htmlspecialchars($value));
+               }
+               if ( $key=='timeEnd')
+               {
+                    $this->endTime =  trim(htmlspecialchars($value));
+               }
+               if ($key=='user_id')
+               {
+                    $this->userId =  trim(htmlspecialchars($value));
+               }
+               if ($key=='eventNote')
+               {
+                    $this->note =  trim(htmlspecialchars($value));
+               }
+               if ($key=='recurent')
+               {
+                    $this->recurent =  trim(htmlspecialchars($value));
+               }
+               if ($key=='times')
+               {
+                    $this->times =  trim(htmlspecialchars($value));
+               }
+               if ($key=='duration')
+               {
+                    $this->duration =  trim(htmlspecialchars($value));
+               }
+            }
+            
+// CHECK FILDS FOR FILLING and PRAPARE DATA FOR ACTION WITH DATABASE
+            if (empty($this->room))
+            {
+                return  $this->vuewRez(array('error'=>NO_ROOM));
+            }
+            else
+            {
+                $room = $this->room;
+                $userId = $this->userId;
+                //  return $this->vuewRez(array('room'=>$room));
+            }
+            if (empty($this->startDay))
+            {
+                return  $this->vuewRez(array('error'=>NO_DATE));
+            }
+            else
+            {
+                $date = $this->startDay;
+                //   return $this->vuewRez(array('room'=>$date));
+            }
+
+            if (empty($this->startTime) || empty($this->endTime) || empty($this->note))
+            {
+                return  $this->vuewRez(array('error'=>NO_DATA_TIME_NOTE));
+            }
+            else
+            {
+                $time_1 = $this->startTime;
+                $time_2 = $this->endTime;
+                $note = $this->note;
+                //    return $this->vuewRez(array('succsess1'=>$time_1,'succsess2'=>$time_2,'succsess3'=>$note));
+            }
+
+            if (null == $this->recurent)
+            {
+                return  $this->vuewRez(array('error'=>RECURENT_ERROR));
+            }
+            
+            $dbh = new PDO(DSN, USER, PASSWD);
+
+            $start =date( $date.' '.$time_1.':00'); //print_r($start."<br>"); CREATE DATE FOR INSERT
+            $end = date($date.' '.$time_2.':00');//print_r($end);exit;  CREATE DATE FOR INSERT
+//IN NOT RECURENT CASE
+            if (false == (int)$this->recurent )
+            {
+                
+                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id )values('$userId','$note','$start', '$end', '$room', 'NULL' )";
+                // print_r( $quer);exit;
+                $sth = $dbh->prepare($quer);
+                $rez = $sth->execute();
+                if (true === $rez)
+                {
+                    return $this->vuewRez(array('success'=> EDD_SUCCESS));
+                }
+                else
+                {
+                    return $this->vuewRez(array('error'=> EDD_ERROR));
+                }
+            }
+// IN RECURENT CASE
+            elseif (1 == (int)$this->recurent &&  !empty($this->times) && !empty($this->duration))
+            {   $recurent = $this->recurent;
+                $times = $this->times;
+                $duration = $this->duration;
+                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id )values('$userId','$note','$start', '$end', '$room', 'NULL' )";
+                // print_r( $quer);exit;
+                $sth = $dbh->prepare($quer);
+                $rez = $sth->execute();
+                if (true === $rez)
+                {
+                    return $this->vuewRez(array('success'=> EDD_SUCCESS));
+                }
+                else
+                {
+                    return $this->vuewRez(array('error'=> EDD_ERROR));
+                }
+
+                // return  $this->vuewRez(array('error'=>$times,'error1'=>$duration));
+                // die('oooo');$recurent = $this->recurent;
+            }
+            else
+            {
+                return  $this->vuewRez(array('error'=>EMPTY_FILDS_TIMES_DURATION));
+                    // return $this->vuewRez(array('succsess1'=>$note));
+            } 
+        }
+        else 
+        {   
+            return $this->vuewRez(array('error'=>NO_DATA));       
+        }
+
+
+        
+        
+        $select = "SELECT * FROM b_events ORDER BY id LIMIT 1";
+        // $sta = $dbh->prepare($select);
+        $rez1 = $dbh->query($select); 
+        
+        if ($rez1->fetchColumn() > 0)
+        {
+            
+            return $this->vuewRez(array('error'=>'no empty string')); 
+        } 
+        else
+         {   //return $this->vuewRez(array('rooms'=>$room, 'dayStart'=>$date, 'timeStart'=>$time_1,'timeEnd'=>$time_2,'user_id'=>$userId,'eventNote'=>$note,'recurent'=>$recurent,'times'=>$times,'duration'=>$duration,));
+        //     $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id )values(:car_id,:payments,:user_id)";
+        //     $sth = $dbh->prepare($quer);
+            return $this->vuewRez(array('success'=>' empty string')); 
+        }
+        // print $dbh->lastInsertId();exit
+        // $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id )values(:car_id,:payments,:user_id)";
+        // $sth = $dbh->prepare($quer);
+        // //return $this->vuewRez([$typePay, $lastname, $firstname]);
+        // $sth->bindParam(':car_id',$this->PayCarId,PDO::PARAM_INT);
+        // $sth->bindParam(':payments',$this->paymentsType,PDO::PARAM_STR);
+        // $sth->bindParam(':user_id',$this->PayUserId,PDO::PARAM_INT);
+        // $rez = $sth->execute(); 
+
+        // if (true == $recurent)
+        // {
+        //     $recurent = 
+        // }
+
+        // if (true === $rez)
+        // {
+        //     return $this->vuewRez(array('success'=> BUY_SUCCESS));
+        //         }
+        //         else
+        //         {
+        //             return $this->vuewRez(array('error'=> BUY_ERROR));
+        //         }
+
+
+
+    }
+
+    
+    function checkDateEvent($startTime,$endTime, $room_id)
+    {
+        $q = "select count(id) from b_events WHERE " . 
+            " (('$startTime' >= start and '$startTime' <= end) AND" .
+            " ('$endTime' >= start and '$endTime' <= end)) AND " . 
+            " $room_id = room_id";
+
+        if (is_object($this->pdo))
+        {
+            $stmt = $this->pdo->prepare($q);
+            $stmt->execute();
+            $res = $stmt->fetchAll();
+        }
+
+        if (0 == $res[0]['count(id)'])
+        {
+            return 0;
+        }
+        else
+        {
+            return $res[0]['count(id)'];
+        }
+        
+    }
+
+
+
 
 
 

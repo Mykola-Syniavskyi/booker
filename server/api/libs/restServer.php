@@ -15,37 +15,44 @@ class restServer
            $arrMethod= array();
            $arrParams= array();
            $this->url= $_SERVER['REQUEST_URI'];  
-            $arrRez = explode('/',$this->nameMethod= substr($this->url, 34));//for classes
-            // $arrRez = explode('/',$this->nameMethod= substr($this->url,25));//for home
-           //print_r($arrRez);
+            // $arrRez = explode('/',$this->nameMethod= substr($this->url, 34));//for classes
+            $arrRez = explode('/',$this->nameMethod = substr($this->url, 26));//for home
+            
+        //    print_r($arrRez);
+           
             $this->method = $_SERVER['REQUEST_METHOD'];
             foreach ($arrRez as $key=>$val)
-            {
-                if ($key==0)//for home ==1 for class ==0
+            { //var_dump($arrRez);
+                if ($key===0)
                 { //print_r($arrRez);
                     array_push($arrMethod, $val); 
                     $this->nameMethod = $arrMethod[0]; //print_r($this->nameMethod);
                 }
-                if ($key==1)//for home ==2 for class ==1
+                 if ($key===1)
                 {
                     array_push($arrParams, $val);
                     $this->params = $arrParams[0];
                 }
             
-                    //print_r($this->params);
+                    // print_r($this->params);
              }
-                //print_r( $this->nameMethod);exit;
+                // print_r( $this->nameMethod);exit;
              $this->getSortVuew();
        }
     }
     
     public function getMethod()
       {  //print_r($this->method);
+        header("Access-Control-Allow-Origin: http://localhost:8080");
+        header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS, DELETE, PATCH');
+        header("Access-Control-Max-Age: 3600");
+        header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type,token, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+        header("Access-Control-Expose-Headers: Location");
                 switch($this->method)
         {   
             case 'GET':
-            //echo  123;
-                $this->setMethod('get'.ucfirst($this->nameMethod), $this->params[0]);
+            // echo  123;
+                $this->setMethod('get'.ucfirst($this->nameMethod), $this->params);
                 break;
             case 'DELETE':
                 $this->setMethod('delete'.ucfirst($this->nameMethod), $this->params[0]);
