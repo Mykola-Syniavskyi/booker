@@ -16,6 +16,7 @@ CREATE TABLE `b_events` (
 	`end` TIMESTAMP NOT NULL,
 	`room_id` int(11) NOT NULL,
 	`recurent_id` int(11) NOT NULL,
+	`created_data` TIMESTAMP NOT NULL,
 	PRIMARY KEY (`id`)
 );
 

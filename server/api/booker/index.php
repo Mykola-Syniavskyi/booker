@@ -20,6 +20,9 @@ class carShop extends restServer
     protected $recurent;
     protected $times;
     protected $duration;
+    protected $createdDate;
+     
+    
 
    
     
@@ -285,6 +288,11 @@ class carShop extends restServer
         {   
         // var_dump($formdata);//exit;
                 // return $this->vuewRez($formdata);
+            
+
+               $this->createdDate = date('Y-m-d H:i:s');
+               $created_data = $this->createdDate;
+
             foreach ($formdata as $key => $value) 
             {
                if ($key=='rooms')
@@ -364,15 +372,14 @@ class carShop extends restServer
             }
             
             $dbh = new PDO(DSN, USER, PASSWD);
-
             $start =date( $date.' '.$time_1.':00'); //print_r($start."<br>"); CREATE DATE FOR INSERT
             $end = date($date.' '.$time_2.':00');//print_r($end);exit;  CREATE DATE FOR INSERT
 //IN NOT RECURENT CASE
             if (false == (int)$this->recurent )
             {
-                
-                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id )values('$userId','$note','$start', '$end', '$room', 'NULL' )";
-                // print_r( $quer);exit;
+                // var_dump($created_data);exit;
+                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', NULL,'$created_data' )";
+                //  print_r( $quer);exit;
                 $sth = $dbh->prepare($quer);
                 $rez = $sth->execute();
                 if (true === $rez)
@@ -385,7 +392,7 @@ class carShop extends restServer
                 }
             }
 // IN RECURENT CASE
-            elseif (1 == (int)$this->recurent &&  !empty($this->times) && !empty($this->duration))
+            elseif ((int)$this->recurent &&  !empty($this->times) && !empty($this->duration))
             {   $recurent = $this->recurent;
                 $times = $this->times;
                 $duration = $this->duration;
