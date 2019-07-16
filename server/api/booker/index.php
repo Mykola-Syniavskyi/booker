@@ -387,11 +387,16 @@ class carShop extends restServer
              {                
 //CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS
                 if ($this->checkWeekDay($start))
-                { 
-                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', 'NULL','$created_data' )";
+                {   
+//CHECK FREE SPACE IN THE BASE                    
+                    if ($this->checkDateEvent($start,$end, $room))
+                    {
+                       return $this->vuewRez(array('error'=> 'Time is busy! please pick another time.')); 
+                    }
+
+                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', NULL,'$created_data' )";
                     $sth = $dbh->prepare($quer);
                     $rez = $sth->execute();
-    
                     if (true === $rez)
                     {
                         return $this->vuewRez(array('success'=> EDD_SUCCESS));
@@ -417,26 +422,37 @@ class carShop extends restServer
  
                         if ($this->checkWeekDay($start))
                         {
-
-                            $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', 'NULL', '$created_data')";
-                            $sth = $dbh->prepare($quer);
-                            $rez = $sth->execute();
-                            $id = $dbh->lastInsertId(); //echo $id;exit;
-                            $start =date( $date.' '.$time_1.':00'); //print_r($start."<br>"); CREATE DATE FOR INSERT
-                            $end = date($date.' '.$time_2.':00');//print_r($end);exit;  CREATE DATE FOR INSERT                      
-//CHANGE DATE IN FOR +1WEEK
-                            for ($i =1; $i< $duration; $i++)
-                            {
+                            for ($i =0; $i<= $duration; $i++)
+                            {   
                                 $a = strtotime($date."+$i week".$time_1.':00');
                                 $b = strtotime($date."+$i week".$time_2.':00');
                                 $start = date('Y-m-d h:i:s ',$a ); //echo 'date 1---'.$start;
-                                $end = date('Y-m-d h:i:s ',$b );//echo 'date 2---'.$end;
- //CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS   
-                                if ($this->checkWeekDay($start)) 
-                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', '$id', '$created_data')";
+                                $end = date('Y-m-d h:i:s ',$b );
+                                if ($this->checkDateEvent($start,$end, $room))
+                                {
+                                    return $this->vuewRez(array('error'=> 'Time is busy! please pick another time.')); 
+                                }
+                            }
+                            //if($this->checkDateEvent($start,$end, $room)){
+                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', null, '$created_data')";
                                 $sth = $dbh->prepare($quer);
                                 $rez = $sth->execute();
-                            }
+                                $id = $dbh->lastInsertId();
+
+                                for($i = 0; $i<= $duration; $i++)
+                                {
+                                    $a = strtotime($date."+$i week".$time_1.':00');
+                                    $b = strtotime($date."+$i week".$time_2.':00');
+                                    $start = date('Y-m-d h:i:s ',$a ); //echo 'date 1---'.$start;
+                                    $end = date('Y-m-d h:i:s ',$b );//echo 'date 2---'.$end;
+//CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS   
+                                    if ($this->checkWeekDay($start)) 
+                                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', $id, '$created_data')";
+                                    $sth = $dbh->prepare($quer);
+                                    $rez = $sth->execute();
+
+                                }
+                        // }
 //CHECKING FOR WEEKENDS IN THE CYCLE
 
                             if (!empty($this->error))
@@ -575,16 +591,14 @@ class carShop extends restServer
     public function checkDateEvent($startTime,$endTime, $room_id)
         {
             $q = "select count(id) from b_events WHERE " . 
-                " (('$startTime' >= start and '$startTime' <= end) AND" .
-                " ('$endTime' >= start and '$endTime' <= end)) AND " . 
-                " $room_id = room_id";
-
-            if (is_object($this->pdo))
-            {
-                $stmt = $this->pdo->prepare($q);
+                " ('$startTime' <= end and '$endTime' <= start) AND" 
+                 . 
+                " room_id=$room_id  "; //print_r($q);exit;
+                $dbh = new PDO(DSN, USER, PASSWD);
+                $stmt = $dbh ->prepare($q);
                 $stmt->execute();
                 $res = $stmt->fetchAll();
-            }
+            
 
             if (0 == $res[0]['count(id)'])
             {
@@ -592,7 +606,7 @@ class carShop extends restServer
             }
             else
             {
-                return $res[0]['count(id)'];
+                return 1;
             }
             
         }
