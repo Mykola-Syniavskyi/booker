@@ -1,8 +1,8 @@
 <?php
-define('USER', 'user15');
-define('PASSWD', 'user15');
-// define('USER', 'root');
-// define('PASSWD', '');
+// define('USER', 'user15');
+// define('PASSWD', 'user15');
+define('USER', 'root');
+define('PASSWD', '');
 define('HOST', 'localhost');
 define('DBNAME', 'user15');
 define('DSN', 'mysql:dbname=user15; host=localhost');
@@ -21,3 +21,5 @@ define('NO_DATE', 'Please pick a date  !');
 define('NO_DATA_TIME_NOTE', 'Please pick a start-end time and fill notelist !');
 define('EDD_SUCCESS', 'Congrats, Event was added !');
 define('EDD_ERROR', 'SORRY, Event was not added !');
+define('ERROR_TIME', 'Please enter corect time !');
+define('ERR_WEEKEND', 'Please choose only work days in the week !');
