@@ -295,65 +295,11 @@ class Booker extends restServer
                 $tmp_array = array('room','startDay','startTime','endTime','user_id','note','recurent','times','duration');//print_r($tmp_array);
                 foreach ($formdata as $key=> $value)
                 {
-                   foreach ($tmp_array as $k =>$val)
-                   {
-                       if ($key==$val)
-                       {
-                           $this->$key= trim(htmlspecialchars($value));
-                       }
-                   }
+                    if (in_array($key, $tmp_array)) {
+                        $this->$key= trim(htmlspecialchars($value));
+                    }
                 }
-                // echo 'room '.$this->room ."; ";
-                // echo 'date '.$this->startDay."; ";
-                // echo 'startT '.$this->startTime."; ";
-                // echo 'EndT '.$this->endTime."; ";
-                // echo 'user_id '.$this->user_id."; ";
-                // echo 'note '.$this->note."; ";
-                // echo 'recurent '.$this->recurent."; ";
-                // echo 'times '.$this->times."; ";
-                // echo 'duration '.$this->duration."; ";
-
-            //print_r($formdata);
-           
-            // foreach ($formdata as $key => $value) 
-            // {
-            //    if ($key=='room')
-            //    {
-            //         $this->room =  trim(htmlspecialchars($value));
-            //    }
-            //    if ($key=='startDay')
-            //    { 
-            //         $this->startDay =  trim(htmlspecialchars($value));
-            //    }
-            //    if ( $key=='startTime')
-            //    {
-            //         $this->startTime =  trim(htmlspecialchars($value));
-            //    }
-            //    if ( $key=='endTime')
-            //    {
-            //         $this->endTime =  trim(htmlspecialchars($value));
-            //    }
-            //    if ($key=='user_id')
-            //    {
-            //         $this->user_id =  trim(htmlspecialchars($value));
-            //    }
-            //    if ($key=='note')
-            //    {
-            //         $this->note =  trim(htmlspecialchars($value));
-            //    }
-            //    if ($key=='recurent')
-            //    {
-            //         $this->recurent =  trim(htmlspecialchars($value));
-            //    }
-            //    if ($key=='times')
-            //    {
-            //         $this->times =  trim(htmlspecialchars($value));
-            //    }
-            //    if ($key=='duration')
-            //    {
-            //         $this->duration =  trim(htmlspecialchars($value));
-            //    }
-            // }
+               
             
 // CHECK FILDS FOR FILLING and PRAPARE DATA FOR ACTION WITH DATABASE
             if (empty($this->room))
@@ -676,6 +622,46 @@ class Booker extends restServer
 
         }
 
+
+        public function puteditEmployee($formData)
+        {
+            
+            $tmp_array = array('user_id','name','role','email','passwd');//print_r($tmp_array);
+                foreach ($formData as $key=> $value)
+                {
+                    if (in_array($key, $tmp_array)) {
+                        $this->$key= trim(htmlspecialchars($value));
+                    }
+                }
+            $passswd = md5($this->passwd);
+            $dbh = new PDO(DSN, USER, PASSWD);
+            $sql = "UPDATE `b_users`   
+                SET `name` = :name,
+                    `email` = :email,
+                    `password` = :password,
+                    `role` = :role 
+                WHERE `id` = :user_id";
+            $statement = $dbh->prepare($sql);
+            $statement->bindValue(":name", $this->name);
+            $statement->bindValue(":email", $this->email);
+            $statement->bindValue(":password", $passswd);
+            $statement->bindValue(":role", $this->role);
+            $statement->bindValue(":user_id", $this->user_id);
+            $rez = $statement->execute();
+           
+            if (true === $rez)
+            {
+                return $this->vuewRez(array('success'=> 'DATA IS UPDATEED'   ));
+            }
+            else
+            {
+                return $this->vuewRez(array('error'=> 'ERROR UPDATE'));
+            } 
+            
+
+            //return  $this->vuewRez(array('user_id'=>$passswd));
+
+        }
 
 
         
