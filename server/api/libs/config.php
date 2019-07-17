@@ -1,8 +1,8 @@
 <?php
-define('USER', 'user15');
-define('PASSWD', 'user15');
-// define('USER', 'root');
-// define('PASSWD', '');
+// define('USER', 'user15');
+// define('PASSWD', 'user15');
+define('USER', 'root');
+define('PASSWD', '');
 define('HOST', 'localhost');
 define('DBNAME', 'user15');
 define('DSN', 'mysql:dbname=user15; host=localhost');
@@ -19,7 +19,9 @@ define('NO_DATA', 'Ups, something is going wrong we is fixing this problem !');
 define('NO_ROOM', 'Please check the room !');
 define('NO_DATE', 'Please pick a date  !');
 define('NO_DATA_TIME_NOTE', 'Please pick a start-end time and fill notelist !');
-define('EDD_SUCCESS', 'Congrats, Event was added !');
-define('EDD_ERROR', 'SORRY, Event was not added !');
+define('EDD_SUCCESS', "Congrats, You book this room ! ");
+define('EDD_ERROR', 'SORRY, Something is going wrong, you can`t book !');
 define('ERROR_TIME', 'Please enter corect time !');
 define('ERR_WEEKEND', 'Please choose only work days in the week !');
+define('BUSY_TIME', 'Time is busy! please pick another time. ');
+define('ERROR_USERS', ' Employee list is empty! please add user.');

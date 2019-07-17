@@ -1,6 +1,6 @@
 <?php
 include '../libs/restServer.php';
-class carShop extends restServer
+class Booker extends restServer
 {
 
     protected $sortVuew;
@@ -11,7 +11,7 @@ class carShop extends restServer
     protected $confirmpasswd;
     protected $logEmail;
     protected $logPasswd;
-    protected $userId;
+    protected $user_id;
     protected $room;
     protected $startTime;
     protected $startDay;
@@ -286,53 +286,74 @@ class carShop extends restServer
     public function postAddEvent($formdata)
     {   
         if (sizeof($formdata))
-        {   
-        // var_dump($formdata);//exit;
-                // return $this->vuewRez($formdata);
-            
-
+        {   // return $this->vuewRez($formdata);
+                
+//CREATE LOCAL CREATED DATE FOR ADD EVENT  
                $this->createdDate = date('Y-m-d H:i:s');
                $created_data = $this->createdDate;
-                // print_r($created_data);exit;
-            foreach ($formdata as $key => $value) 
-            {
-               if ($key=='rooms')
-               {
-                    $this->room =  trim(htmlspecialchars($value));
-               }
-               if ($key=='dayStart')
-               { 
-                    $this->startDay =  trim(htmlspecialchars($value));
-               }
-               if ( $key=='timeStart')
-               {
-                    $this->startTime =  trim(htmlspecialchars($value));
-               }
-               if ( $key=='timeEnd')
-               {
-                    $this->endTime =  trim(htmlspecialchars($value));
-               }
-               if ($key=='user_id')
-               {
-                    $this->userId =  trim(htmlspecialchars($value));
-               }
-               if ($key=='eventNote')
-               {
-                    $this->note =  trim(htmlspecialchars($value));
-               }
-               if ($key=='recurent')
-               {
-                    $this->recurent =  trim(htmlspecialchars($value));
-               }
-               if ($key=='times')
-               {
-                    $this->times =  trim(htmlspecialchars($value));
-               }
-               if ($key=='duration')
-               {
-                    $this->duration =  trim(htmlspecialchars($value));
-               }
-            }
+//GET VALUES FROM THE POST $FORMDATA
+                $tmp_array = array('room','startDay','startTime','endTime','user_id','note','recurent','times','duration');//print_r($tmp_array);
+                foreach ($formdata as $key=> $value)
+                {
+                   foreach ($tmp_array as $k =>$val)
+                   {
+                       if ($key==$val)
+                       {
+                           $this->$key= trim(htmlspecialchars($value));
+                       }
+                   }
+                }
+                // echo 'room '.$this->room ."; ";
+                // echo 'date '.$this->startDay."; ";
+                // echo 'startT '.$this->startTime."; ";
+                // echo 'EndT '.$this->endTime."; ";
+                // echo 'user_id '.$this->user_id."; ";
+                // echo 'note '.$this->note."; ";
+                // echo 'recurent '.$this->recurent."; ";
+                // echo 'times '.$this->times."; ";
+                // echo 'duration '.$this->duration."; ";
+
+            //print_r($formdata);
+           
+            // foreach ($formdata as $key => $value) 
+            // {
+            //    if ($key=='room')
+            //    {
+            //         $this->room =  trim(htmlspecialchars($value));
+            //    }
+            //    if ($key=='startDay')
+            //    { 
+            //         $this->startDay =  trim(htmlspecialchars($value));
+            //    }
+            //    if ( $key=='startTime')
+            //    {
+            //         $this->startTime =  trim(htmlspecialchars($value));
+            //    }
+            //    if ( $key=='endTime')
+            //    {
+            //         $this->endTime =  trim(htmlspecialchars($value));
+            //    }
+            //    if ($key=='user_id')
+            //    {
+            //         $this->user_id =  trim(htmlspecialchars($value));
+            //    }
+            //    if ($key=='note')
+            //    {
+            //         $this->note =  trim(htmlspecialchars($value));
+            //    }
+            //    if ($key=='recurent')
+            //    {
+            //         $this->recurent =  trim(htmlspecialchars($value));
+            //    }
+            //    if ($key=='times')
+            //    {
+            //         $this->times =  trim(htmlspecialchars($value));
+            //    }
+            //    if ($key=='duration')
+            //    {
+            //         $this->duration =  trim(htmlspecialchars($value));
+            //    }
+            // }
             
 // CHECK FILDS FOR FILLING and PRAPARE DATA FOR ACTION WITH DATABASE
             if (empty($this->room))
@@ -342,7 +363,7 @@ class carShop extends restServer
             else
             {
                 $room = $this->room;
-                $userId = $this->userId;
+                $user_id = $this->user_id;
                 //  return $this->vuewRez(array('room'=>$room));
             }
             if (empty($this->startDay))
@@ -377,7 +398,7 @@ class carShop extends restServer
             {
                 return  $this->vuewRez(array('error'=>RECURENT_ERROR));
             }
-            
+//PREPARE INSERTED DATE            
             $dbh = new PDO(DSN, USER, PASSWD);
             $start =date( $date.' '.$time_1.':00'); //print_r($start."<br>"); CREATE DATE FOR INSERT
             $end = date($date.' '.$time_2.':00');//print_r($end);exit;  CREATE DATE FOR INSERT
@@ -388,18 +409,19 @@ class carShop extends restServer
 //CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS
                 if ($this->checkWeekDay($start))
                 {   
-//CHECK FREE SPACE IN THE BASE                    
-                    if ($this->checkDateEvent($start,$end, $room))
+//CHECK FREE SPACE IN THE BASE 
+                    
+                    if (!$this->checkDateEvent($start,$end, $room))
                     {
-                       return $this->vuewRez(array('error'=> 'Time is busy! please pick another time.')); 
-                    }
+                       return $this->vuewRez(array('error'=>' _from '.$time_1.' to '.$time_2.'_ '. BUSY_TIME)); 
+                    }//exit;
 
-                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', NULL,'$created_data' )";
+                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', NULL,'$created_data' )";
                     $sth = $dbh->prepare($quer);
                     $rez = $sth->execute();
                     if (true === $rez)
                     {
-                        return $this->vuewRez(array('success'=> EDD_SUCCESS));
+                        return $this->vuewRez(array('success'=> EDD_SUCCESS .$date.' _from '.$time_1.' to '.$time_2.'_' ));
                     }
                     else
                     {
@@ -418,142 +440,159 @@ class carShop extends restServer
                 {
 //CASE 'WEEKLY':                    
                 case 'WEEKLY':
-//CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS
- 
-                        if ($this->checkWeekDay($start))
-                        {
+               
                             for ($i =0; $i<= $duration; $i++)
                             {   
                                 $a = strtotime($date."+$i week".$time_1.':00');
                                 $b = strtotime($date."+$i week".$time_2.':00');
-                                $start = date('Y-m-d h:i:s ',$a ); //echo 'date 1---'.$start;
+                                $start = date('Y-m-d h:i:s ',$a ); 
                                 $end = date('Y-m-d h:i:s ',$b );
-                                if ($this->checkDateEvent($start,$end, $room))
+//CHECK DAY OFF  AND CROSS DATE IN DATABSE                               
+                                if (!$this->checkDateEvent($start,$end, $room))
                                 {
-                                    return $this->vuewRez(array('error'=> 'Time is busy! please pick another time.')); 
+                                    return $this->vuewRez(array('error'=> ' _from '.$time_1.' to '.$time_2.'_ '. BUSY_TIME)); 
+                                }
+                                if (!$this->checkWeekDay($start))
+                                {
+                                    return $this->vuewRez($this->error);
                                 }
                             }
-                            //if($this->checkDateEvent($start,$end, $room)){
-                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', null, '$created_data')";
+//PUT FIRST ENTERING DATE
+                                $start =date( $date.' '.$time_1.':00'); 
+                                $end = date($date.' '.$time_2.':00');
+//PARENT INSERT   EVENT                             
+                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', null, '$created_data')";
                                 $sth = $dbh->prepare($quer);
                                 $rez = $sth->execute();
-                                $id = $dbh->lastInsertId();
+                                $id = $dbh->lastInsertId();//get last insert id
 
-                                for($i = 0; $i<= $duration; $i++)
+                                for($i = 1; $i<= $duration; $i++)
                                 {
                                     $a = strtotime($date."+$i week".$time_1.':00');
                                     $b = strtotime($date."+$i week".$time_2.':00');
-                                    $start = date('Y-m-d h:i:s ',$a ); //echo 'date 1---'.$start;
-                                    $end = date('Y-m-d h:i:s ',$b );//echo 'date 2---'.$end;
-//CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS   
-                                    if ($this->checkWeekDay($start)) 
-                                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', $id, '$created_data')";
+                                    $start = date('Y-m-d h:i:s ',$a ); 
+                                    $end = date('Y-m-d h:i:s ',$b );
+//CHILD INSERT EVENT   
+                                    $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', $id, '$created_data')";
                                     $sth = $dbh->prepare($quer);
                                     $rez = $sth->execute();
 
                                 }
-                        // }
-//CHECKING FOR WEEKENDS IN THE CYCLE
-
-                            if (!empty($this->error))
-                            {
-                                return $this->vuewRez($this->error);
-                            }
+                        
 //CHECKING FOR ADDING EVENT
                             if (true === $rez)
                                 {
-                                    return $this->vuewRez(array('success'=> EDD_SUCCESS));
+                                    return $this->vuewRez(array('success'=> EDD_SUCCESS .$date.' _from '.$time_1.' to '.$time_2.'_'));
                                 }
                                 else
                                 {
                                     return $this->vuewRez(array('error'=> EDD_ERROR));
-                                }
-                        }return $this->vuewRez($this->error);
+                                }                       
                         break;
 //CASE 'BI-WEEKLY':                         
                 case 'BI-WEEKLY': 
-//CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS
-                        if ($this->checkWeekDay($start))
-                        {
 
-                            $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', 'NULL', '$created_data')";
-                            $sth = $dbh->prepare($quer);
-                            $rez = $sth->execute();
-                            $id = $dbh->lastInsertId(); //echo $id;exit;
-                            $start =date( $date.' '.$time_1.':00'); //echo ($start."<br>"); //CREATE DATE FOR INSERT
-                            $end = date($date.' '.$time_2.':00');//echo ($end);exit;  //CREATE DATE FOR INSERT                      
-    //CHANGE DATE IN FOR +2 WEEK
-                            for ($i = 1; $i< $duration; $i++)
-                            {   $i = $i*2;
-                                 
-                                $a = strtotime($date."+$i week".$time_1.':00'); //echo $a;
-                                $b = strtotime($date."+$i week".$time_2.':00');
-                                $start = date('Y-m-d h:i:s ',$a ); //echo 'date 1---'.$start."<br>";
-                                $end = date('Y-m-d h:i:s ',$b );//echo 'date 2---'.$end;
-                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', '$id', '$created_data')";
-                                $sth = $dbh->prepare($quer);
-                                $rez = $sth->execute();
+                        for ($i =0; $i<= $duration; $i++)
+                        {   
+                            $i = $i*2;
+                            $a = strtotime($date."+$i week".$time_1.':00');
+                            $b = strtotime($date."+$i week".$time_2.':00');
+                            $start = date('Y-m-d h:i:s ',$a ); 
+                            $end = date('Y-m-d h:i:s ',$b );
+                            if (!$this->checkDateEvent($start,$end, $room))
+                            {
+                                return $this->vuewRez(array('error'=> ' _from '.$time_1.' to '.$time_2.'_ '. BUSY_TIME)); 
                             }
-//CHECKING FOR WEEKENDS IN THE CYCLE
-
-                            if (!empty($this->error))
+                            if (!$this->checkWeekDay($start))
                             {
                                 return $this->vuewRez($this->error);
                             }
-//CHECKING FOR ADDING EVENT     
-                            if (true === $rez)
-                                {
-                                    return $this->vuewRez(array('success'=> EDD_SUCCESS));
-                                }
-                                else
-                                {
-                                    return $this->vuewRez(array('error'=> EDD_ERROR));
-                                }
-                        }return $this->vuewRez($this->error);
+                        }
+//PUT FIRST ENTERING DATE
+                            $start =date( $date.' '.$time_1.':00'); 
+                            $end = date($date.' '.$time_2.':00');
+//PARENT INSERT   EVENT          
+                            $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', null, '$created_data')";
+                            $sth = $dbh->prepare($quer);
+                            $rez = $sth->execute();
+                            $id = $dbh->lastInsertId();//get last insert id
 
+                            for($i = 1; $i<= $duration; $i++)
+                            {
+                                $i = $i*2;
+                                $a = strtotime($date."+$i week".$time_1.':00');
+                                $b = strtotime($date."+$i week".$time_2.':00');
+                                $start = date('Y-m-d h:i:s ',$a ); 
+                                $end = date('Y-m-d h:i:s ',$b );
+//CHILD INSERT   EVENT
+                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', $id, '$created_data')";
+                                $sth = $dbh->prepare($quer);
+                                $rez = $sth->execute();
+
+                            }
+
+//CHECKING FOR ADDING EVENT
+                        if (true === $rez)
+                            {
+                                return $this->vuewRez(array('success'=>EDD_SUCCESS .$date.' _from '.$time_1.' to '.$time_2.'_'));
+                            }
+                            else
+                            {
+                                return $this->vuewRez(array('error'=> EDD_ERROR));
+                            }
                         break;
 
 //CASE 'MONTHLY':                        
                 case 'MONTHLY':
-//CHECK DAY OF THE WEEK FOR FORBITTEN CHOOSING WEEKENDS
-                         if ($this->checkWeekDay($start)) 
-                         {
 
-                             $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', 'NULL', '$created_data')";
-                             $sth = $dbh->prepare($quer);
-                             $rez = $sth->execute();
-                             $id = $dbh->lastInsertId(); //echo $id;exit;
-                             $start =date( $date.' '.$time_1.':00'); //echo ($start."<br>"); //CREATE DATE FOR INSERT
-                             $end = date($date.' '.$time_2.':00');//echo ($end);exit;  //CREATE DATE FOR INSERT                      
-//CHANGE DATE IN FOR +1 month
-                             for ($i = 1; $i< $duration; $i++)
-                             {   //$i = $i*2;
-                                 
-                                 $a = strtotime($date."+$i month".$time_1.':00'); //echo $a;
-                                 $b = strtotime($date."+$i month".$time_2.':00');
-                                 $start = date('Y-m-d h:i:s ',$a ); //echo 'date 1---'.$start."<br>";
-                                 $end = date('Y-m-d h:i:s ',$b );//echo 'date 2---'.$end;
-                                 $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$userId','$note','$start', '$end', '$room', '$id', '$created_data')";
-                                 $sth = $dbh->prepare($quer);
-                                 $rez = $sth->execute();
-                             }
-//CHECKING FOR WEEKENDS IN THE CYCLE
-
-                            if (!empty($this->error))
+                        for ($i =0; $i<= $duration; $i++)
+                        {   
+                            $a = strtotime($date."+$i month".$time_1.':00');
+                            $b = strtotime($date."+$i month".$time_2.':00');
+                            $start = date('Y-m-d h:i:s ',$a ); 
+                            $end = date('Y-m-d h:i:s ',$b );
+//CHECK DAY OFF  AND CROSS DATE IN DATABSE                               
+                            if (!$this->checkDateEvent($start,$end, $room))
+                            {
+                                return $this->vuewRez(array('error'=> ' _from '.$time_1.' to '.$time_2.'_ '. BUSY_TIME)); 
+                            }
+                            if (!$this->checkWeekDay($start))
                             {
                                 return $this->vuewRez($this->error);
                             }
-//CHECKING FOR ADDING EVENT     
-                            if (true === $rez)
-                                {
-                                    return $this->vuewRez(array('success'=> EDD_SUCCESS));
-                                }
-                                else
-                                {
-                                    return $this->vuewRez(array('error'=> EDD_ERROR));
-                                }
-                
-                         }  return $this->vuewRez($this->error); 
+                        }
+//PUT FIRST ENTERING DATE
+                            $start =date( $date.' '.$time_1.':00'); 
+                            $end = date($date.' '.$time_2.':00');
+//PARENT INSERT   EVENT                             
+                            $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', null, '$created_data')";
+                            $sth = $dbh->prepare($quer);
+                            $rez = $sth->execute();
+                            $id = $dbh->lastInsertId();//get last insert id
+
+                            for($i = 1; $i<= $duration; $i++)
+                            {
+                                $a = strtotime($date."+$i month".$time_1.':00');
+                                $b = strtotime($date."+$i month".$time_2.':00');
+                                $start = date('Y-m-d h:i:s ',$a ); 
+                                $end = date('Y-m-d h:i:s ',$b );
+//CHILD INSERT EVENT   
+                                $quer = "INSERT INTO b_events (user_id, note, start, end, room_id, recurent_id, created_data )values('$user_id','$note','$start', '$end', '$room', $id, '$created_data')";
+                                $sth = $dbh->prepare($quer);
+                                $rez = $sth->execute();
+
+                            }
+                    
+//CHECKING FOR ADDING EVENT
+                        if (true === $rez)
+                            {
+                                return $this->vuewRez(array('success'=> EDD_SUCCESS .$date.'  _from '.$time_1.' to '.$time_2.'_'
+                            ));
+                            }
+                            else
+                            {
+                                return $this->vuewRez(array('error'=> EDD_ERROR));
+                            }  
                         break;
                 }       
             }
@@ -591,7 +630,7 @@ class carShop extends restServer
     public function checkDateEvent($startTime,$endTime, $room_id)
         {
             $q = "select count(id) from b_events WHERE " . 
-                " ('$startTime' <= end and '$endTime' <= start) AND" 
+                " ('$startTime' < end and '$endTime' > start) AND" 
                  . 
                 " room_id=$room_id  "; //print_r($q);exit;
                 $dbh = new PDO(DSN, USER, PASSWD);
@@ -602,15 +641,40 @@ class carShop extends restServer
 
             if (0 == $res[0]['count(id)'])
             {
-                return 0;
+                return 1;//if it was not found cross return true
             }
             else
             {
-                return 1;
+                return 0;
             }
             
         }
 
+
+//GETT ALL EMPLOYEE
+
+        public function getAllEmployee()
+        {
+            $dbh = new PDO(DSN, USER, PASSWD);
+            $q = "SELECT id, name, email from b_users";
+            $dbh->prepare($q);
+            $arr = array();
+            foreach($dbh->query($q) as $row) 
+           { 
+                $tmp_arr = array('id'=>$row['id'],'name'=>$row['name'], 'email'=>$row['email']);
+                array_push($arr, $tmp_arr); 
+           } 
+           if (sizeof($arr))
+           {
+                return $this->vuewRez($arr); 
+           }
+           else
+           {
+                return  $this->vuewRez(array('error'=>ERROR_USERS)); 
+           }    
+
+
+        }
 
 
 
@@ -906,7 +970,7 @@ class carShop extends restServer
         
     // }   
 }
-$obj = new carShop();
+$obj = new Booker();
 $obj->parsUrl();
 
 // $obj->postReg($formData);
