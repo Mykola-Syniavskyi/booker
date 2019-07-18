@@ -1,8 +1,8 @@
 <?php
-define('USER', 'user15');
-define('PASSWD', 'user15');
-// define('USER', 'root');
-// define('PASSWD', '');
+// define('USER', 'user15');
+// define('PASSWD', 'user15');
+define('USER', 'root');
+define('PASSWD', '');
 define('HOST', 'localhost');
 define('DBNAME', 'user15');
 define('DSN', 'mysql:dbname=user15; host=localhost');
@@ -25,3 +25,9 @@ define('ERROR_TIME', 'Please enter corect time !');
 define('ERR_WEEKEND', 'Please choose only work days in the week !');
 define('BUSY_TIME', 'Time is busy! please pick another time. ');
 define('ERROR_USERS', ' Employee list is empty! please add user.');
+define('ERROR_USER', ' This user does not exist.');
+define('DATA_UPDATED', ' Information about user is updated.');
+define('ERROR_UPDATE', ' Failure Information is not updated !.');
+define('SUCCESS_DELETE_USER', ' You deleted user successfully !.');
+define('ERROR_DELETE_USER', ' You CANT DALETE this user !.');
+

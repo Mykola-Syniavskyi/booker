@@ -23,26 +23,7 @@ class Booker extends restServer
     protected $createdDate;
     protected $error;
     
-    
 
-   
-    
-    
-
-    
-    // function getAllCars()
-    // { //print_r('fff');
-    //     $resultArray = array();
-    //     $dbh = new PDO(DSN, USER, PASSWD);// print_r($dbh);
-    //     foreach($dbh->query("select cars.id, brand.brand, model.model  from cars join brand on cars.id=brand.id join   model on cars.id=model.id") as $row) 
-    //     {
-    //         $tmp_array = array('id'=>$row['id'],'brand'=>$row['brand'],'model'=>$row['model']);
-    //         array_push($resultArray, $tmp_array); 
-    //     }
-    //    $this->arrayAllCars = $resultArray;
-    //    $this->vuewRez($this->arrayAllCars, $this->sortVuew);
-    //     return $resultArray;
-    // }
     // function getOneCar($id)
     // {
     //     $resultArray = array();
@@ -625,6 +606,8 @@ class Booker extends restServer
 
         public function puteditEmployee($formData)
         {
+            //  return  $this->vuewRez($formData);
+
             
             $tmp_array = array('user_id','name','role','email','passwd');//print_r($tmp_array);
                 foreach ($formData as $key=> $value)
@@ -633,7 +616,23 @@ class Booker extends restServer
                         $this->$key= trim(htmlspecialchars($value));
                     }
                 }
-            $passswd = md5($this->passwd);
+
+                if (strlen($this->name) == 0 || strlen($this->email) == 0 || strlen($this->passwd) == 0)
+                {
+                    return $this->vuewRez(array('error'=> 'PLEASE fill all filds!'));
+
+                }
+
+                if (!filter_var($this->email, FILTER_VALIDATE_EMAIL))
+                {
+                    return $this->vuewRez(array('error'=>ERR_EMAIL));
+                }
+
+                if ( $this->role !='user' && $this->role !='admin' )
+                {
+                    return $this->vuewRez(array('error'=> 'enter only USER or ADMIN'));
+                }
+            $passwd = md5($this->passwd);
             $dbh = new PDO(DSN, USER, PASSWD);
             $sql = "UPDATE `b_users`   
                 SET `name` = :name,
@@ -644,25 +643,79 @@ class Booker extends restServer
             $statement = $dbh->prepare($sql);
             $statement->bindValue(":name", $this->name);
             $statement->bindValue(":email", $this->email);
-            $statement->bindValue(":password", $passswd);
+            $statement->bindValue(":password", $passwd);
             $statement->bindValue(":role", $this->role);
             $statement->bindValue(":user_id", $this->user_id);
             $rez = $statement->execute();
            
             if (true === $rez)
             {
-                return $this->vuewRez(array('success'=> 'DATA IS UPDATEED'   ));
+                return $this->vuewRez(array('success'=> DATA_UPDATED   ));
             }
             else
             {
-                return $this->vuewRez(array('error'=> 'ERROR UPDATE'));
+                return $this->vuewRez(array('error'=> ERROR_UPDATE));
             } 
-            
-
-            //return  $this->vuewRez(array('user_id'=>$passswd));
-
         }
 
+
+
+
+        public function deleteEmployee($id)
+        {   
+            if (strlen($id) > 0)
+            {
+                $id = trim(htmlspecialchars($id));
+                $dbh = new PDO(DSN, USER, PASSWD);
+                $sql = "DELETE FROM b_users WHERE id = :id" ;
+                $statement = $dbh->prepare($sql);
+                $statement->bindValue(":id", $id);
+                $rez = $statement->execute();
+           
+                if (true === $rez)
+                {
+                    return $this->vuewRez(array('success'=> SUCCESS_DELETE_USER   ));
+                }
+                else
+                {
+                    return $this->vuewRez(array('error'=> ERROR_DELETE_USER));
+                } 
+            }
+            else
+            {
+                return $this->vuewRez(array('error'=> ERROR_USER));
+            }
+   
+        }
+
+
+
+        public function getAllEvents($date)
+        {    
+            if (strlen($date) > 0)
+            {
+                //return $this->vuewRez($date);
+                $date = trim(htmlspecialchars($date));
+                $dbh = new PDO(DSN, USER, PASSWD);
+                $sql = "SELECT id, user_id, note, start, end, room_id, recurent_id, created_data  FROM b_events where month(start) = $date " ;
+                $arr = array();
+                foreach($dbh->query($sql) as $row) 
+                { 
+                        $tmp_arr = array('id'=>$row['id'],'user_id'=>$row['user_id'],'note'=>$row['note'],'start'=>$row['start'],'end'=>$row['end'],'room_id'=>$row['room_id'],'recurent_id'=>$row['recurent_id'],'created_data'=>$row['created_data'] );
+                        array_push($arr, $tmp_arr); 
+                } 
+                
+                if (sizeof($arr))
+                {
+
+                    return $this->vuewRez($arr); 
+                }
+                else 
+                {
+                        return $this->vuewRez(array('error'=>'no events'));
+                }
+            }
+        }
 
         
         // $select = "SELECT * FROM b_events ORDER BY id LIMIT 1";
