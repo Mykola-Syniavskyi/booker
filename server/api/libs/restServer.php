@@ -15,8 +15,8 @@ class restServer
            $arrMethod= array();
            $arrParams= array();
            $this->url= $_SERVER['REQUEST_URI'];  
-            // $arrRez = explode('/',$this->nameMethod= substr($this->url, 34));//for classes
-            $arrRez = explode('/',$this->nameMethod = substr($this->url, 26));//for home
+            $arrRez = explode('/',$this->nameMethod= substr($this->url, 34));//for classes
+            // $arrRez = explode('/',$this->nameMethod = substr($this->url, 26));//for home
             
         //    print_r($arrRez);
            
@@ -28,17 +28,18 @@ class restServer
                     array_push($arrMethod, $val); 
                     $this->nameMethod = $arrMethod[0]; //print_r($this->nameMethod);
                 }
-                 if ($key===1)
+                else
                 {
                     array_push($arrParams, $val);
-                    $this->params = $arrParams[0];
                 }
-            
-                    // print_r($this->params);
-             }
-                // print_r( $this->nameMethod);exit;
-             $this->getSortVuew();
-       }
+                
+                
+                // print_r($this->params);
+            }
+            $this->params = $arrParams;
+                //  print_r( $this->nameMethod);exit;
+                $this->getSortVuew();
+            }
     }
     
     public function getMethod()
@@ -52,36 +53,49 @@ class restServer
         {   
             case 'GET':
             // echo  123;
-                $this->setMethod('get'.ucfirst($this->nameMethod), $this->params);
+                $this->setMethodGet('get'.ucfirst($this->nameMethod), $this->params);
                 break;
             case 'DELETE':
-                $this->setMethod('delete'.ucfirst($this->nameMethod), $this->params[0]);
+                $this->setMethodGet('delete'.ucfirst($this->nameMethod), $this->params);
                 break;
             case 'POST':
             
                 $this->params = '';
                 $this->params  = $_POST;
-                $this->setMethod('post'.ucfirst($this->nameMethod), $this->params);
+                $this->setMethodPostPut('post'.ucfirst($this->nameMethod), $this->params);
                 break;
             case 'PUT':
                 parse_str(file_get_contents('php://input'), $params);
                 $this->params  = $params; //print_r($fParams);
-                $this->setMethod('put'.ucfirst($this->nameMethod), $this->params);
+                $this->setMethodPostPut('put'.ucfirst($this->nameMethod), $this->params);
                 break;
             default:
                 return false;
         }
     }
     
-    // public function Test($param)
-    // {
-    //     echo "hello, $param";
-    // }
-    function setMethod($method, $param=false)
+  
+    function setMethodGet($method, $param=false)
     { 
          
         if (method_exists($this, $method))
         { 
+            // print_r($param);
+            call_user_func_array (array($this, $method) ,$param );
+        }
+        else
+        {
+            header("HTTP/1.1 400 Bad Request Api");
+            $this->errors = '404 Sorry, we cant find this action!';
+        }
+    }
+
+    function setMethodPostPut($method, $param=false)
+    { 
+         
+        if (method_exists($this, $method))
+        { 
+            // print_r($param);
             call_user_func(array($this, $method) ,$param );
         }
         else
@@ -90,6 +104,7 @@ class restServer
             $this->errors = '404 Sorry, we cant find this action!';
         }
     }
+
     public function getErrors()
     {
         if (!empty($this->errors))

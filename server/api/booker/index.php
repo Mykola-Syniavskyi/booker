@@ -267,7 +267,8 @@ class Booker extends restServer
     public function postAddEvent($formdata)
     {   
         if (sizeof($formdata))
-        {   // return $this->vuewRez($formdata);
+        {    
+            // return $this->vuewRez($formdata);
                 
 //CREATE LOCAL CREATED DATE FOR ADD EVENT  
                $this->createdDate = date('Y-m-d H:i:s');
@@ -690,14 +691,14 @@ class Booker extends restServer
 
 
 
-        public function getAllEvents($date)
+        public function getAllEvents($date, $room_id, $year)
         {    
             if (strlen($date) > 0)
             {
                 //return $this->vuewRez($date);
                 $date = trim(htmlspecialchars($date));
                 $dbh = new PDO(DSN, USER, PASSWD);
-                $sql = "SELECT id, user_id, note, start, end, room_id, recurent_id, created_data  FROM b_events where month(start) = $date " ;
+                $sql = "SELECT id, user_id, note, start, end, room_id, recurent_id, created_data  FROM b_events where month(start) = $date and room_id = $room_id  and YEAR(start) = $year" ;
                 $arr = array();
                 foreach($dbh->query($sql) as $row) 
                 { 
