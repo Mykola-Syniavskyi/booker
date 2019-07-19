@@ -710,14 +710,18 @@ class Booker extends restServer
                 {
 
                     return $this->vuewRez($arr); 
-                }
-                else 
-                {
-                        return $this->vuewRez(array('error'=>'no events'));
+                }else {
+                    return false;
                 }
             }
         }
 
+
+
+        public function putEventUpdate($data)
+        {
+            return $this->vuewRez($data); 
+        }
         
         // $select = "SELECT * FROM b_events ORDER BY id LIMIT 1";
         // // $sta = $dbh->prepare($select);
