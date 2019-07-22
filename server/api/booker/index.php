@@ -23,6 +23,8 @@ class Booker extends restServer
     protected $createdDate;
     protected $event_id;
     protected $error;
+    protected $curent_user_name;
+    
     
 
     // function getOneCar($id)
@@ -240,10 +242,10 @@ class Booker extends restServer
             //return  $this->vuewRez(array(1=>$this->logPasswd));
             $arr = array();
             $dbh = new PDO(DSN, USER, PASSWD);
-            $quer = "SELECT id, name, password FROM b_users WHERE email = '$this->logEmail' AND password = '$this->logPasswd'"; //print_r($quer);
+            $quer = "SELECT id, name, password, role FROM b_users WHERE email = '$this->logEmail' AND password = '$this->logPasswd'"; //print_r($quer);
             foreach($dbh->query($quer) as $row) 
            { 
-                $tmp_arr = array('name'=>$row['name'],'id'=>$row['id'] ,'password'=>$row['password']);
+                $tmp_arr = array('name'=>$row['name'],'id'=>$row['id'] ,'password'=>$row['password'] ,'role'=>$row['role']);
                 array_push($arr, $tmp_arr); 
            } 
            if (sizeof($arr))
@@ -269,7 +271,7 @@ class Booker extends restServer
     {   
         if (sizeof($formdata))
         {    
-            // return $this->vuewRez($formdata);
+            //  return $this->vuewRez($formdata);
                 
 //CREATE LOCAL CREATED DATE FOR ADD EVENT  
                $this->createdDate = date('Y-m-d H:i:s');
@@ -575,8 +577,7 @@ class Booker extends restServer
             else
             {
                 return 0;
-            }
-            
+            }           
         }
 
 
@@ -585,12 +586,12 @@ class Booker extends restServer
         public function getAllEmployee()
         {
             $dbh = new PDO(DSN, USER, PASSWD);
-            $q = "SELECT id, name, email from b_users";
+            $q = "SELECT id, name, email  from b_users";
             $dbh->prepare($q);
             $arr = array();
             foreach($dbh->query($q) as $row) 
            { 
-                $tmp_arr = array('id'=>$row['id'],'name'=>$row['name'], 'email'=>$row['email']);
+                $tmp_arr = array('id'=>$row['id'],'name'=>$row['name'], 'email'=>$row['email'] );
                 array_push($arr, $tmp_arr); 
            } 
            if (sizeof($arr))
@@ -601,8 +602,6 @@ class Booker extends restServer
            {
                 return  $this->vuewRez(array('error'=>ERROR_USERS)); 
            }    
-
-
         }
 
 
@@ -695,15 +694,15 @@ class Booker extends restServer
         public function getAllEvents($date, $room_id, $year)
         {    
             if (strlen($date) > 0)
-            {
-                //return $this->vuewRez($date);
-                $date = trim(htmlspecialchars($date));
-                $dbh = new PDO(DSN, USER, PASSWD);
-                $sql = "SELECT id, user_id, note, start, end, room_id, recurent_id, created_data  FROM b_events where month(start) = $date and room_id = $room_id  and YEAR(start) = $year" ;
+            // return $this->vuewRez($room_id);
+            $date = trim(htmlspecialchars($date));
+            $dbh = new PDO(DSN, USER, PASSWD);
+            $sql = "SELECT b_events.id, b_events.user_id, b_events.note, b_events.start, b_events.end, b_events.room_id, b_events.recurent_id, b_events.created_data, b_users.name  FROM b_events   LEFT JOIN b_users ON user_id = b_users.id where month(start) = $date  and room_id = $room_id  and YEAR(start) = $year" ;
+            {  
                 $arr = array();
                 foreach($dbh->query($sql) as $row) 
                 { 
-                        $tmp_arr = array('id'=>$row['id'],'user_id'=>$row['user_id'],'note'=>$row['note'],'start'=>$row['start'],'end'=>$row['end'],'room_id'=>$row['room_id'],'recurent_id'=>$row['recurent_id'],'created_data'=>$row['created_data'] );
+                        $tmp_arr = array('id'=>$row['id'],'user_id'=>$row['user_id'],'note'=>$row['note'],'start'=>$row['start'],'end'=>$row['end'],'room_id'=>$row['room_id'],'recurent_id'=>$row['recurent_id'],'created_data'=>$row['created_data'], 'name'=>$row['name'] );
                         array_push($arr, $tmp_arr); 
                 } 
                 
@@ -722,20 +721,391 @@ class Booker extends restServer
         public function putEventUpdate($data)
         {
             if (sizeof($data))
-            {
-                
-                $tmp_array = array('event_id','startTime','endTime','note','recurent');//print_r($tmp_array);
-                foreach ($formData as $key=> $value)
+            {  
+                //  return $this->vuewRez($data);          
+                $tmp_array = array('event_id','startTime','endTime','note','recurent','user_id','role','name', 'curent_user_name');//print_r($tmp_array);
+                foreach ($data as $key=> $value)
                 {
-                    if (in_array($key, $tmp_array)) {
+                    if (in_array($key, $tmp_array)) 
+                    {
                         $this->$key= trim(htmlspecialchars($value));
                     }
-                }return $this->vuewRez(array('event_id'=>$this->event_id));
+                }
+                // CHECKING TIME
+                if ($this->startTime > $this->endTime )
+                {
+                    return $this->vuewRez(array('error'=> ERROR_TIME   )); 
+                }
 
+                $dbh = new PDO(DSN, USER, PASSWD);
+
+//GET TIME FROM DATABASE FOR CHANGE
+                $sql="SELECT start, end, recurent_id, room_id  FROM b_events where id = $this->event_id";
+                $arr = array();
+                foreach($dbh->query($sql) as $row) 
+                { 
+                        $tmp_arr = array('start'=>$row['start'],'end'=>$row['end'], 'recurent_id'=>$row['recurent_id'], 'room_id'=>$row['room_id']);
+                        array_push($arr, $tmp_arr); 
+                } 
+
+                $partTimeFirst = substr($arr[0]['start'],0,10);
+                $start = $partTimeFirst.' '.$this->startTime.':00';
+                $end = $partTimeFirst.' '.$this->endTime.':00';
+                $recurent_id = $arr[0]['recurent_id'];
+                $room_id = $arr[0]['room_id'];
+                // print_r($this->role);exit;
+//CHECK USER FOR UPDATing ONLY PERSONAL EVENT
+//NOT RECURENT
+
+                if ($this->role == 'user' && ($this->recurent == NULL || $this->recurent == 0) )
+                { 
+                    // echo 1;exit;
+                    if (!$this->checkDateEvent($start, $end, $room_id))
+                        {
+                            return $this->vuewRez(array('error'=> ' _from '.$this->startTime.' to '.$this->endTime.'_ '. BUSY_TIME)); 
+                        }
+                    $sql = "UPDATE b_events   
+                    SET b_events.start = :start,
+                        b_events.end = :end,
+                        b_events.note = :note
+                    WHERE b_events.id = '$this->event_id' AND b_events.user_id =  (SELECT id FROM b_users where name = :name )";
+                    $statement = $dbh->prepare($sql);
+                    $statement->bindValue(":start", $start);
+                    $statement->bindValue(":end", $end);
+                    $statement->bindValue(":note", $this->note);
+                    $statement->bindValue(":name", $this->curent_user_name);
+                    // $statement->bindValue(":event_id", $this->event_id);
+                      
+                    $statement->execute();
+                    $count =  $statement->rowCount();
+                    // print_r($count);exit;
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> DATA_UPDATED   ));
+                    }
+                    else
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_UPDATE_USER));
+                    } 
+                }
+//FOR RECURENT EVENT
+                elseif ($this->role == 'user' && 1 == $this->recurent )
+                {   
+                    // echo 2; exit;
+                    $sql = " SELECT recurent_id from b_events where  id = $this->event_id AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->curent_user_name' )";
+                    //print_r($sql);exit;
+//GET RECURENT ID FOR RECURSIVE UPDATE
+                    foreach($dbh->query($sql) as $row) 
+                    {
+                        $recurent_id_recursive = $row['recurent_id'];
+                    }
+                    if ($recurent_id_recursive == NULL)
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_UPDATE_USER));
+                    } 
+                    // print_r($recurent_id_recursive)  ;exit;                 
+
+//SELECT RECURSIVE EVENTS
+                    
+                    $sql = " SELECT id , start, end, note from  b_events where  (id ='$recurent_id_recursive' or  recurent_id = '$recurent_id_recursive') AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->name' );";
+                    $arr = array();
+                    // print_r($sql);exit;
+                    foreach($dbh->query($sql) as $row) 
+                    { 
+                        $tmp_arr = array('start'=>$row['start'],'end'=>$row['end'],'note'=>$row['note'],'id'=>$row['id']);
+                        array_push($arr, $tmp_arr); 
+                    }
+// PICK UP TIME FROM BASE and CHECK IT
+                    foreach ($arr as $key => $value)
+                    {   
+//GET ONLY DATE
+                        $start_date = substr($value['start'],0,10).' '.$this->startTime.':00';
+                        $end_date = substr($value['start'],0,10).' '.$this->endTime.':00';
+                        if (!$this->checkDateEvent($start_date, $end_date, $room_id))
+                            {
+                                return $this->vuewRez(array('error'=> ' _from '.$this->startTime.' to '.$this->endTime.'_ '. BUSY_TIME)); 
+                            }
+                    }
+
+                    foreach ($arr as $key => $value)
+                    {   
+//GET ONLY DATE
+                        $start_date = substr($value['start'],0,10).' '.$this->startTime.':00';
+                        $end_date = substr($value['start'],0,10).' '.$this->endTime.':00';
+
+                        $sql = "UPDATE b_events   
+                        SET b_events.start = '$start_date',
+                        b_events.end = '$end_date',
+                        b_events.note = '$this->note'
+                        WHERE b_events.id = '$value[id]'";
+                        // print_r($sql);
+                        $statement = $dbh->prepare($sql);
+                        $statement->execute();
+                        $count =  $statement->rowCount();
+                    } 
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> DATA_UPDATED));
+                    }
+                    else
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_UPDATE_USER));
+                    } 
+                }
+// UPDATE FOR ADMIN NOT RECURENT EVENTS             
+                elseif ($this->role == 'admin' && ($this->recurent == NULL || $this->recurent == 0  )) 
+                { 
+                    if (!$this->checkDateEvent($start, $end, $room_id))
+                        {
+                            return $this->vuewRez(array('error'=> ' _from '.$this->startTime.' to '.$this->endTime.'_ '. BUSY_TIME)); 
+                        }
+                    $sql = "UPDATE b_events   
+                    SET b_events.start = :start,
+                        b_events.end = :end,
+                        b_events.note = :note
+                    WHERE b_events.id = '$this->event_id' AND b_events.user_id =  (SELECT id FROM b_users where name = :name )";
+                    $statement = $dbh->prepare($sql);
+                    $statement->bindValue(":start", $start);
+                    $statement->bindValue(":end", $end);
+                    $statement->bindValue(":note", $this->note);
+                    $statement->bindValue(":name", $this->name);
+                    // $statement->bindValue(":event_id", $this->event_id);
+                      
+                    $statement->execute();
+                    $count =  $statement->rowCount();
+                    // print_r($count);exit;
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> DATA_UPDATED   ));
+                    }
+                    else
+                    {
+                        $this->vuewRez(array('error'=>'this event was not created by this user  , please choose another user'));
+                    } 
+                }
+//UPDATE FOR ADMIN RECURENT EVENTS
+                elseif($this->role == 'admin' && $this->recurent == 1)
+                {
+                    $sql = " SELECT recurent_id from b_events where  id = $this->event_id AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->name' )";
+                    // print_r($this->name);exit;
+//GET RECURENT ID FOR RECURSIVE UPDATE
+                    foreach($dbh->query($sql) as $row) 
+                    {
+                        $recurent_id_recursive = $row['recurent_id'];
+                    }
+                    if ($recurent_id_recursive == NULL)
+                    {
+                        return  $this->vuewRez(array('error'=>'this event was not created by this user , please choose another user'));
+                    }
+//SELECT RECURSIVE EVENTS
+                    $sql = " SELECT id , start, end, note from  b_events where  (id ='$recurent_id_recursive' or  recurent_id = '$recurent_id_recursive') AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->name' );";
+                    $arr = array();
+                    foreach($dbh->query($sql) as $row) 
+                    { 
+                        $tmp_arr = array('start'=>$row['start'],'end'=>$row['end'],'note'=>$row['note'],'id'=>$row['id']);
+                        array_push($arr, $tmp_arr); 
+                    }//print_r($arr);exit;
+// PICK UP TIME FROM BASE and CHECK IT
+                    foreach ($arr as $key => $value)
+                    {   
+//GET ONLY DATE
+                        $start_date = substr($value['start'],0,10).' '.$this->startTime.':00';
+                        $end_date = substr($value['start'],0,10).' '.$this->endTime.':00';
+                        if (!$this->checkDateEvent($start_date, $end_date, $room_id))
+                            {
+                                return $this->vuewRez(array('error'=> ' _from '.$this->startTime.' to '.$this->endTime.'_ '. BUSY_TIME)); 
+                            }
+                    }
+
+                    foreach ($arr as $key => $value)
+                    {   
+//GET ONLY DATE
+                        $start_date = substr($value['start'],0,10).' '.$this->startTime.':00';
+                        $end_date = substr($value['start'],0,10).' '.$this->endTime.':00';
+
+                        $sql = "UPDATE b_events   
+                        SET b_events.start = '$start_date',
+                        b_events.end = '$end_date',
+                        b_events.note = '$this->note'
+                        WHERE b_events.id = '$value[id]'";
+                        // print_r($sql);
+                        $statement = $dbh->prepare($sql);
+                        $statement->execute();
+                        $count =  $statement->rowCount();
+                    } 
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> DATA_UPDATED));
+                    }
+                    else
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_UPDATE_USER));
+                    } 
+    
+
+                    
+                }
+                else 
+                {
+                    return $this->vuewRez(array('error'=>EDD_ERROR));
+                }
             }
-             
+
+
+            
         }
+
         
+        public function deleteEventDelete($id , $role, $recurent, $curent_user_name)
+        {
+            //  return $this->vuewRez(array('error'=> $recurent));
+            if (strlen($id) > 0)
+            {   $this->role = trim(htmlspecialchars($role));
+                $id = trim(htmlspecialchars($id));
+                $this->recurent = trim(htmlspecialchars($recurent));
+                $this->curent_user_name = trim(htmlspecialchars($curent_user_name));
+
+
+
+                $dbh = new PDO(DSN, USER, PASSWD);
+
+//GET TIME FROM DATABASE FOR CHANGE
+                // $sql="SELECT  recurent_id  FROM b_events where id = $id or recurent_id = $id";
+                // // print_r($sql);exit;
+                // $arr = array();
+                // foreach($dbh->query($sql) as $row) 
+                // { 
+                //         $tmp_arr = array('recurent_id'=>$row['recurent_id']);
+                //         array_push($arr, $tmp_arr); 
+                // } 
+                // print_r($arr);exit; 
+                // $partTimeFirst = substr($arr[0]['start'],0,10);
+                // $start = $partTimeFirst.' '.$this->startTime.':00';
+                // $end = $partTimeFirst.' '.$this->endTime.':00';
+                // $recurent_id = $arr[0]['recurent_id'];
+                // $room_id = $arr[0]['room_id'];
+
+
+
+
+
+                if($this->role == 'user' && ($this->recurent == 0 || $this->recurent == NULL) )
+                {
+                    $sql = "DELETE FROM b_events WHERE b_events.id = '$id' AND b_events.user_id =  (SELECT id FROM b_users where name =  '$this->curent_user_name' )";
+                    $statement = $dbh->prepare($sql);
+                    $statement->execute();
+                    $count =  $statement->rowCount();
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> SUCCESS_DELETE_EVENT   ));
+                    }
+                    else
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_DELETE_EVENT));
+                    } 
+                }
+
+                elseif($this->role == 'user' && $this->recurent == 1 )
+                {
+                    $sql = "SELECT  id  FROM b_events where id = $id or id =  (select recurent_id from b_events where id = $id);";
+                    $arr = array();
+                    foreach($dbh->query($sql) as $row) 
+                    { 
+                            $tmp_arr = array('id'=>$row['id']);
+                            array_push($arr, $tmp_arr); 
+                    } 
+
+                    foreach ($arr as $key=> $value)
+                    {
+                        $sql = "DELETE FROM b_events WHERE b_events.id = '$value[id]' AND b_events.user_id =  (SELECT id FROM b_users where name =  '$this->curent_user_name' )";
+                        $statement = $dbh->prepare($sql);
+                        $statement->execute();
+                    }
+
+                    $count =  $statement->rowCount();
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> SUCCESS_DELETE_EVENT   ));
+                    }
+                    else
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_DELETE_EVENT));
+                    } 
+                }
+
+
+                elseif ($this->role == 'admin' && ($this->recurent == NULL || $this->recurent == 0  )) 
+                { 
+                    $sql = "SELECT b_events.id FROM b_events left join  b_users on b_events.user_id =  b_users.id WHERE b_events.id = $id;";
+                    $arr = array();
+                    foreach($dbh->query($sql) as $row) 
+                    { 
+                            $tmp_arr = array('id'=>$row['id']);
+                            array_push($arr, $tmp_arr); 
+                    }
+                    $deleteed_id = $arr[0]['id'];
+
+//DELETE NO RECURENT
+                    $sql = "DELETE FROM b_events WHERE b_events.id = '$deleteed_id'";
+                    $statement = $dbh->prepare($sql);
+                    $statement->execute();
+                    $count = $statement->rowCount();
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> SUCCESS_DELETE_EVENT   ));
+                    }
+                    else
+                    {
+                        $this->vuewRez(array('error'=>'this event was not deleted, plase reload page'));
+                    } 
+                }
+
+
+
+                elseif ($this->role == 'admin' && $this->recurent == 1) 
+                { 
+//GET NAME USER EVENT
+                    $sql = "SELECT b_users.name FROM b_events left join  b_users on b_events.user_id =  b_users.id WHERE b_events.id = $id;";
+                    $arr = array();
+                    foreach($dbh->query($sql) as $row) 
+                    { 
+                        $tmp_arr = array('name'=>$row['name']);
+                        array_push($arr, $tmp_arr); 
+                    }
+                    $this->name = $arr[0]['name'];
+
+                    $sql = "SELECT  id  FROM b_events where id = $id or id =  (select recurent_id from b_events where id = $id);";
+                    $arr = array();
+                    foreach($dbh->query($sql) as $row) 
+                    { 
+                            $tmp_arr = array('id'=>$row['id']);
+                            array_push($arr, $tmp_arr); 
+                    } 
+
+                    foreach ($arr as $key=> $value)
+                    {
+                        $sql = "DELETE FROM b_events WHERE b_events.id = '$value[id]' AND b_events.user_id =  (SELECT id FROM b_users where name =  '$this->name' )";
+                        $statement = $dbh->prepare($sql);
+                        $statement->execute();
+                        $count =  $statement->rowCount();
+                    }
+
+                    if ($count > 0)
+                    {
+                        return $this->vuewRez(array('success'=> SUCCESS_DELETE_EVENT   ));
+                    }
+                    else
+                    {
+                        return $this->vuewRez(array('error'=> ERROR_DELETE_EVENT));
+                    } 
+                }
+                
+
+            }else 
+            {
+                return $this->vuewRez(array('error'=> 'no $id'));
+            }
+        }
         
 }
 $obj = new Booker();

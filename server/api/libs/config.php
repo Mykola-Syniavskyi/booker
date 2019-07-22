@@ -1,8 +1,8 @@
 <?php
-define('USER', 'user15');
-define('PASSWD', 'user15');
-// define('USER', 'root');
-// define('PASSWD', '');
+// define('USER', 'user15');
+// define('PASSWD', 'user15');
+define('USER', 'root');
+define('PASSWD', '');
 define('HOST', 'localhost');
 define('DBNAME', 'user15');
 define('DSN', 'mysql:dbname=user15; host=localhost');
@@ -30,4 +30,7 @@ define('DATA_UPDATED', ' Information about user is updated.');
 define('ERROR_UPDATE', ' Failure Information is not updated !.');
 define('SUCCESS_DELETE_USER', ' You deleted user successfully !.');
 define('ERROR_DELETE_USER', ' You CANT DALETE this user !.');
+define('ERROR_UPDATE_USER', ' YOU CAN CHANGE ONLY RERSONAL EVENTS! .');
+define('SUCCESS_DELETE_EVENT', ' EVENT WAS DELETED! .');
+define('ERROR_DELETE_EVENT', ' EVENT WAS NOT DELETED if THIS EVENT IS NOT YOURS! .');
 
