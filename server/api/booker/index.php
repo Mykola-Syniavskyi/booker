@@ -25,30 +25,7 @@ class Booker extends restServer
     protected $error;
     protected $curent_user_name;
     
-    
-
-    // function getOneCar($id)
-    // {
-    //     $resultArray = array();
-    //     $dbh = new PDO(DSN, USER, PASSWD);
-    //     $stmt = $dbh->prepare("select cars.id, cars.engine_capacity,cars.max_speed,cars.price,cars.year, model.model, color.color  from cars  join   model on cars.id=model.id join color_cars on color_cars.car_id=cars.id join color on color.id=color_cars.color_id   where cars.id =?");
-    //     $stmt->execute([$id]); 
-    //     $row = $stmt->fetch();
-    //         $tmp_arr = array(
-    //         'id' => $row['id'],
-    //         'model'=>$row['model'],    
-    //         'engine_capacity'=>$row['engine_capacity'],
-    //         'year'=>$row['year'],
-    //         'color'=>$row['color'],
-    //         'max_speed'=>$row['max_speed'],
-    //         'price'=>$row['price']);
-    //          array_push($resultArray, $tmp_arr); 
-    //          $this->arrayOneCar = $resultArray;
-    //         $this->vuewRez($this->arrayOneCar, $this->sortVuew);
-    //     return $resultArray;
-        
-       
-    // }
+  
     public function getSortVuew()
     {
         $id = substr($this->url, strrpos($this->url, '/') + 1);
@@ -56,6 +33,8 @@ class Booker extends restServer
         $this->sortVuew = $id; //print_r($this->sortVuew);
         // return $this->sortVuew;
     }
+
+
     private function vuewRez($result, $sortVuew = 'json')
     {   
         header('Access-Control-Allow-Origin: *');
@@ -108,6 +87,10 @@ class Booker extends restServer
                 break;
         }
     }
+
+
+
+
     public function toXml($result)
     {   
         $xml = new SimpleXMLElement('<root/>');
@@ -119,6 +102,9 @@ class Booker extends restServer
         print $xml->asXML();
     }
     
+
+
+
     public function getHelp()
     {
          print_r( get_class_methods($this));
@@ -262,7 +248,6 @@ class Booker extends restServer
         {
             return $this->vuewRez(array('error'=> FORM));
         }
-       //return $this->vuewRez($params);
     }
 
 
@@ -271,7 +256,6 @@ class Booker extends restServer
     {   
         if (sizeof($formdata))
         {    
-            //  return $this->vuewRez($formdata);
                 
 //CREATE LOCAL CREATED DATE FOR ADD EVENT  
                $this->createdDate = date('Y-m-d H:i:s');
@@ -295,7 +279,6 @@ class Booker extends restServer
             {
                 $room = $this->room;
                 $user_id = $this->user_id;
-                //  return $this->vuewRez(array('room'=>$room));
             }
             if (empty($this->startDay))
             {
@@ -304,7 +287,6 @@ class Booker extends restServer
             else
             {
                 $date = $this->startDay;
-                //   return $this->vuewRez(array('room'=>$date));
             }
 
             if (empty($this->startTime) || empty($this->endTime) || empty($this->note))
@@ -563,7 +545,7 @@ class Booker extends restServer
             $q = "select count(id) from b_events WHERE " . 
                 " ('$startTime' < end and '$endTime' > start) AND" 
                  . 
-                " room_id=$room_id  "; //print_r($q);exit;
+                " room_id=$room_id  "; 
                 $dbh = new PDO(DSN, USER, PASSWD);
                 $stmt = $dbh ->prepare($q);
                 $stmt->execute();
@@ -720,6 +702,7 @@ class Booker extends restServer
 
         public function putEventUpdate($data)
         {
+            // return $this->vuewRez($data);
             if (sizeof($data))
             {  
                 //  return $this->vuewRez($data);          
@@ -753,13 +736,12 @@ class Booker extends restServer
                 $end = $partTimeFirst.' '.$this->endTime.':00';
                 $recurent_id = $arr[0]['recurent_id'];
                 $room_id = $arr[0]['room_id'];
-                // print_r($this->role);exit;
-//CHECK USER FOR UPDATing ONLY PERSONAL EVENT
+
+                //CHECK USER FOR UPDATing ONLY PERSONAL EVENT
 //NOT RECURENT
 
                 if ($this->role == 'user' && ($this->recurent == NULL || $this->recurent == 0) )
                 { 
-                    // echo 1;exit;
                     if (!$this->checkDateEvent($start, $end, $room_id))
                         {
                             return $this->vuewRez(array('error'=> ' _from '.$this->startTime.' to '.$this->endTime.'_ '. BUSY_TIME)); 
@@ -791,9 +773,8 @@ class Booker extends restServer
 //FOR RECURENT EVENT
                 elseif ($this->role == 'user' && 1 == $this->recurent )
                 {   
-                    // echo 2; exit;
                     $sql = " SELECT recurent_id from b_events where  id = $this->event_id AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->curent_user_name' )";
-                    //print_r($sql);exit;
+                    // print_r($sql);exit;
 //GET RECURENT ID FOR RECURSIVE UPDATE
                     foreach($dbh->query($sql) as $row) 
                     {
@@ -807,9 +788,9 @@ class Booker extends restServer
 
 //SELECT RECURSIVE EVENTS
                     
-                    $sql = " SELECT id , start, end, note from  b_events where  (id ='$recurent_id_recursive' or  recurent_id = '$recurent_id_recursive') AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->name' );";
+                    $sql = " SELECT id , start, end, note from  b_events where  (id ='$recurent_id_recursive' or  recurent_id = '$recurent_id_recursive') AND b_events.user_id =  (SELECT id FROM b_users where name = '$this->curent_user_name' );";//было просто имя 
                     $arr = array();
-                    // print_r($sql);exit;
+                    //  print_r($sql);exit;
                     foreach($dbh->query($sql) as $row) 
                     { 
                         $tmp_arr = array('start'=>$row['start'],'end'=>$row['end'],'note'=>$row['note'],'id'=>$row['id']);
@@ -821,6 +802,7 @@ class Booker extends restServer
 //GET ONLY DATE
                         $start_date = substr($value['start'],0,10).' '.$this->startTime.':00';
                         $end_date = substr($value['start'],0,10).' '.$this->endTime.':00';
+                        // print_r($room_id);exit;
                         if (!$this->checkDateEvent($start_date, $end_date, $room_id))
                             {
                                 return $this->vuewRez(array('error'=> ' _from '.$this->startTime.' to '.$this->endTime.'_ '. BUSY_TIME)); 
@@ -965,29 +947,7 @@ class Booker extends restServer
                 $this->recurent = trim(htmlspecialchars($recurent));
                 $this->curent_user_name = trim(htmlspecialchars($curent_user_name));
 
-
-
                 $dbh = new PDO(DSN, USER, PASSWD);
-
-//GET TIME FROM DATABASE FOR CHANGE
-                // $sql="SELECT  recurent_id  FROM b_events where id = $id or recurent_id = $id";
-                // // print_r($sql);exit;
-                // $arr = array();
-                // foreach($dbh->query($sql) as $row) 
-                // { 
-                //         $tmp_arr = array('recurent_id'=>$row['recurent_id']);
-                //         array_push($arr, $tmp_arr); 
-                // } 
-                // print_r($arr);exit; 
-                // $partTimeFirst = substr($arr[0]['start'],0,10);
-                // $start = $partTimeFirst.' '.$this->startTime.':00';
-                // $end = $partTimeFirst.' '.$this->endTime.':00';
-                // $recurent_id = $arr[0]['recurent_id'];
-                // $room_id = $arr[0]['room_id'];
-
-
-
-
 
                 if($this->role == 'user' && ($this->recurent == 0 || $this->recurent == NULL) )
                 {
